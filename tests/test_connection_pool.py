@@ -12,7 +12,7 @@ import asyncio
 import time
 from sqlalchemy import text
 
-from src.fastapi_auth.core.database import engine, AsyncSessionLocal
+from fastapi_auth.core.database import engine, AsyncSessionLocal
 
 
 async def test_pool_size():

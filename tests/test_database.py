@@ -7,7 +7,7 @@ import asyncio
 
 from sqlalchemy import text
 
-from src.fastapi_auth.core.database import AsyncSessionLocal, engine
+from fastapi_auth.core.database import AsyncSessionLocal, engine
 
 
 async def test_connection():

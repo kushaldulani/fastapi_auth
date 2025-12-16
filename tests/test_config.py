@@ -3,7 +3,7 @@ Simple test to verify our config is working.
 Run this with: uv run python test_config.py
 """
 
-from src.fastapi_auth.core.config import settings
+from fastapi_auth.core.config import settings
 
 print("🔧 Testing Configuration...\n")
 

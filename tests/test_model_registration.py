@@ -1,7 +1,7 @@
 """Test if User model is registered with Base."""
 
-from src.fastapi_auth.models.base import Base
-import src.fastapi_auth.models  # noqa: F401
+from fastapi_auth.models.base import Base
+import fastapi_auth.models  # noqa: F401
 
 print("Registered tables in Base.metadata:")
 for table_name in Base.metadata.tables:
