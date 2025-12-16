@@ -1,0 +1,12 @@
+[project]
+name = "fastapi-auth"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.124.4",
+    "psycopg2-binary>=2.9.11",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.38.0",
+]
