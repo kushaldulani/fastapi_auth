@@ -1,0 +1,43 @@
+# ============================================================================
+# Docker Compose - Development Environment
+# ============================================================================
+# Start everything: docker-compose up -d
+# Stop everything: docker-compose down
+# View logs: docker-compose logs -f
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine  # Lightweight PostgreSQL
+    container_name: fastapi_auth_db
+
+    # Environment variables for PostgreSQL
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastapi_auth
+
+    # Port mapping: host:container
+    # Using 5433 on host to avoid conflict with local PostgreSQL on 5432
+    ports:
+      - "5433:5432"
+
+    # Persistent storage - data survives container restarts!
+    # This creates a named volume 'postgres_data'
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+    # Health check - Docker knows when PostgreSQL is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Named volumes - Docker manages this storage
+volumes:
+  postgres_data:
+    driver: local  # Stored on your local machine

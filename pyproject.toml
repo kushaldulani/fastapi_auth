@@ -1,12 +1,175 @@
+# ============================================================================
+# Project Metadata
+# ============================================================================
 [project]
 name = "fastapi-auth"
 version = "0.1.0"
-description = "Add your description here"
+description = "A modular, production-ready authentication and authorization system for FastAPI"
+authors = [
+    {name = "Kushal Dulani", email = "your.email@example.com"}
+]
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "fastapi>=0.124.4",
-    "psycopg2-binary>=2.9.11",
-    "sqlalchemy>=2.0.45",
-    "uvicorn>=0.38.0",
+license = {text = "MIT"}
+
+# Keywords for package discovery (if you publish to PyPI)
+keywords = ["fastapi", "authentication", "authorization", "jwt", "rbac", "abac", "multi-tenant"]
+
+# Classifiers for PyPI
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: FastAPI",
 ]
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+dependencies = [
+    # Core Framework
+    "fastapi>=0.115.0", # Web framework
+    "uvicorn[standard]>=0.32.0", # ASGI server (with websocket support)
+    "pydantic>=2.0.0", # Data validation
+    "pydantic-settings>=2.0.0", # Environment-based configuration
+    # Database
+    "sqlalchemy>=2.0.0", # ORM with async support
+    "asyncpg>=0.30.0", # PostgreSQL async driver
+    "alembic>=1.13.0", # Database migrations
+    # Security & Crypto
+    "passlib[bcrypt]>=1.7.4", # Password hashing with bcrypt
+    "python-jose[cryptography]>=3.3.0", # JWT token handling
+    "python-multipart>=0.0.6", # For form data parsing (login forms)
+    # Utilities
+    "python-dotenv>=1.0.0", # Load .env files
+    "bcrypt>=4.0.0,<5.0.0",
+    "greenlet>=3.3.0",
+]
+
+# ============================================================================
+# Optional Dependencies (Install with: uv pip install ".[dev]")
+# ============================================================================
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "pytest>=8.0.0",              # Testing framework
+    "pytest-asyncio>=0.24.0",     # Async test support
+    "pytest-cov>=4.1.0",          # Code coverage
+    "httpx>=0.27.0",              # Async HTTP client (for testing APIs)
+    "factory-boy>=3.3.0",         # Test data factories
+    "faker>=20.0.0",              # Generate fake data for tests
+]
+
+# Production extras (optional integrations)
+redis = [
+    "redis>=5.0.0",               # Redis client (for rate limiting, caching)
+]
+
+email = [
+    "jinja2>=3.1.0",              # Email template rendering
+    "aiosmtplib>=3.0.0",          # Async SMTP client
+]
+
+oauth = [
+    "authlib>=1.3.0",             # OAuth 2.0 / OIDC client
+]
+
+monitoring = [
+    "prometheus-fastapi-instrumentator>=6.1.0",  # Prometheus metrics
+    "structlog>=23.0.0",          # Structured logging
+]
+
+# Install everything with: uv pip install ".[all]"
+all = [
+    "fastapi-auth[dev,redis,email,oauth,monitoring]",
+]
+
+# ============================================================================
+# Build System (tells pip/uv how to build this package)
+# ============================================================================
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# ============================================================================
+# Package Discovery (tells pip where to find our code)
+# ============================================================================
+[tool.hatchling.build.targets.wheel]
+packages = ["src/fastapi_auth"]
+
+# ============================================================================
+# Pytest Configuration
+# ============================================================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]           # Where to find tests
+asyncio_mode = "auto"           # Automatically detect async tests
+python_files = ["test_*.py"]    # Test file pattern
+python_classes = ["Test*"]      # Test class pattern
+python_functions = ["test_*"]   # Test function pattern
+addopts = [
+    "-v",                       # Verbose output
+    "--strict-markers",         # Raise error on unknown markers
+    "--tb=short",               # Short traceback format
+    "--cov=fastapi_auth",       # Measure code coverage
+    "--cov-report=term-missing", # Show missing lines
+]
+
+# ============================================================================
+# Coverage Configuration
+# ============================================================================
+[tool.coverage.run]
+source = ["src/fastapi_auth"]
+omit = [
+    "*/tests/*",                # Don't measure test coverage
+    "*/__init__.py",            # Don't measure __init__ files
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",         # Lines marked with "pragma: no cover"
+    "def __repr__",             # __repr__ methods
+    "raise AssertionError",     # Assertions
+    "raise NotImplementedError", # Abstract methods
+    "if __name__ == .__main__.:", # Script entry points
+    "if TYPE_CHECKING:",        # Type checking imports
+]
+
+# ============================================================================
+# Ruff (Linter & Formatter) - Optional but recommended
+# ============================================================================
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+]
+
+# ============================================================================
+# MyPy (Type Checker) - Optional but recommended
+# ============================================================================
+[tool.mypy]
+python_version = "3.11"
+strict = false                  # Start with loose typing, tighten later
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false   # Set to true once you add types everywhere
+
+[[tool.mypy.overrides]]
+module = "passlib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "jose.*"
+ignore_missing_imports = true
