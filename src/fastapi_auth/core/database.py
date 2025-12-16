@@ -15,9 +15,10 @@ Key Concepts:
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base
 
-from fastapi_auth.core.config import settings
+# Use relative imports within the package (consistent with models/user.py)
+from ..models.base import Base
+from .config import settings
 
 
 # ============================================================================
@@ -29,6 +30,12 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,  # Print SQL queries in debug mode
     future=True,  # Use SQLAlchemy 2.0 style
+
+    # Connection Pool Settings
+    pool_size=5,           # Keep 5 connections open (default)
+    max_overflow=10,       # Allow 10 extra connections temporarily (default)
+    pool_pre_ping=True,    # Test connection before using (recommended for production)
+    pool_recycle=3600,     # Recycle connections after 1 hour (prevents stale connections)
 )
 
 
@@ -45,10 +52,10 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 # ============================================================================
-# 3. Create Base class for models
+# 3. Base is imported from models.base
 # ============================================================================
-# All our models (User, Session, etc.) will inherit from this
-Base = declarative_base()
+# Base is now defined in fastapi_auth.models.base
+# All our models (User, Session, etc.) will inherit from it
 
 
 # ============================================================================
