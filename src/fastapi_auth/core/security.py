@@ -5,10 +5,12 @@ This module provides:
 1. Password hashing (bcrypt)
 2. JWT token creation (access & refresh)
 3. JWT token validation
+4. JTI hashing for secure token storage
 
 SIMPLE & PRODUCTION-READY!
 """
 
+import hashlib
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -234,6 +236,28 @@ def verify_refresh_token(token: str) -> dict[str, Any] | None:
 # ============================================================================
 # Token Utilities
 # ============================================================================
+
+def hash_jti(jti: str) -> str:
+    """
+    Hash a JTI (JWT ID) for secure storage.
+
+    We hash JTI before storing in database so even if database is compromised,
+    the actual tokens cannot be reconstructed.
+
+    Uses SHA-256 (fast, secure, deterministic).
+
+    Args:
+        jti: JWT ID (UUID string like "a1b2c3d4-...")
+
+    Returns:
+        64-character hex string (SHA-256 hash)
+
+    Example:
+        jti = "a1b2c3d4-e5f6-4789-0abc-def123456789"
+        hash_jti(jti)  # → "5d41402abc4b2a76b9719d911017c592..."
+    """
+    return hashlib.sha256(jti.encode()).hexdigest()
+
 
 def get_token_expiration(token: str) -> datetime | None:
     """

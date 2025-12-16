@@ -46,6 +46,19 @@ class UserLogin(BaseModel):
     password: str
 
 
+class RefreshTokenRequest(BaseModel):
+    """
+    Data needed to refresh access token.
+
+    Example:
+        {
+            "refresh_token": "eyJhbGc..."
+        }
+    """
+
+    refresh_token: str
+
+
 # ============================================================================
 # Response Schemas (Data going OUT to client)
 # ============================================================================

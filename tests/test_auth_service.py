@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from fastapi_auth.core.database import AsyncSessionLocal, engine
 from fastapi_auth.models.base import Base
+from fastapi_auth.models import user, token_blacklist, user_session  # noqa: F401
 from fastapi_auth.models.user import User
 from fastapi_auth.schemas.auth import UserLogin, UserRegister
 from fastapi_auth.services.auth import (

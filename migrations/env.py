@@ -20,6 +20,8 @@ from src.fastapi_auth.models.base import Base
 # This avoids the "table already defined" error
 # Import the module itself, which will trigger the class definition
 from src.fastapi_auth.models import user  # noqa: F401 - Import module, not User class
+from src.fastapi_auth.models import token_blacklist  # noqa: F401
+from src.fastapi_auth.models import user_session  # noqa: F401
 
 # this is the Alembic Config object
 config = context.config

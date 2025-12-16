@@ -1,6 +1,7 @@
 """Test if User model is registered with Base."""
 
 from fastapi_auth.models.base import Base
+from fastapi_auth.models import user, token_blacklist  # noqa: F401
 import fastapi_auth.models  # noqa: F401
 
 print("Registered tables in Base.metadata:")

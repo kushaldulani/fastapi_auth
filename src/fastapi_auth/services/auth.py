@@ -5,8 +5,9 @@ Business logic for user registration, login, and token management.
 This is the layer between API endpoints and the database.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
+from jose import jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +15,12 @@ from ..core.config import settings
 from ..core.security import (
     create_access_token,
     create_refresh_token,
+    hash_jti,
     hash_password,
     verify_password,
 )
 from ..models.user import User
+from ..models.user_session import UserSession
 from ..schemas.auth import TokenResponse, UserLogin, UserRegister
 
 
@@ -107,6 +110,24 @@ async def register_user(
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
+    # Step 5: Create session for this device/login
+    # Decode both tokens to get their JTIs
+    access_payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=["HS256"])
+    refresh_payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+
+    access_jti = access_payload["jti"]
+    refresh_jti = refresh_payload["jti"]
+
+    session = UserSession(
+        user_id=new_user.id,
+        access_token_jti_hash=hash_jti(access_jti),
+        refresh_token_jti_hash=hash_jti(refresh_jti),
+        previous_refresh_token_jti_hash=None,  # First login, no previous
+        device_info=None,  # TODO: Extract from User-Agent header
+    )
+    db.add(session)
+    await db.commit()
+
     tokens = TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -172,6 +193,24 @@ async def login_user(
     token_data = {"user_id": user.id, "email": user.email}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
+
+    # Step 5: Create session for this device/login
+    # Decode both tokens to get their JTIs
+    access_payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=["HS256"])
+    refresh_payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
+
+    access_jti = access_payload["jti"]
+    refresh_jti = refresh_payload["jti"]
+
+    session = UserSession(
+        user_id=user.id,
+        access_token_jti_hash=hash_jti(access_jti),
+        refresh_token_jti_hash=hash_jti(refresh_jti),
+        previous_refresh_token_jti_hash=None,  # New login, no previous
+        device_info=None,  # TODO: Extract from User-Agent header
+    )
+    db.add(session)
+    await db.commit()
 
     tokens = TokenResponse(
         access_token=access_token,
