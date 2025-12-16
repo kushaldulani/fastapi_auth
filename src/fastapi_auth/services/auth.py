@@ -12,6 +12,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.config import settings
+from ..core.exceptions import (
+    AuthenticationError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
 from ..core.security import (
     create_access_token,
     create_refresh_token,
@@ -22,28 +27,6 @@ from ..core.security import (
 from ..models.user import User
 from ..models.user_session import UserSession
 from ..schemas.auth import TokenResponse, UserLogin, UserRegister
-
-
-# ============================================================================
-# Exceptions (custom errors for better error handling)
-# ============================================================================
-
-class AuthenticationError(Exception):
-    """Raised when authentication fails (wrong password, etc)."""
-
-    pass
-
-
-class UserAlreadyExistsError(Exception):
-    """Raised when trying to register with an existing email."""
-
-    pass
-
-
-class UserNotFoundError(Exception):
-    """Raised when user doesn't exist."""
-
-    pass
 
 
 # ============================================================================

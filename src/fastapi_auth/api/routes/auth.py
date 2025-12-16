@@ -17,20 +17,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import settings
 from ...core.database import get_db
-from ...core.security import create_access_token, create_refresh_token, hash_jti, verify_refresh_token
-from ...models.token_blacklist import TokenBlacklist
-from ...models.user_session import UserSession
-from ...schemas.auth import RefreshTokenRequest, TokenResponse, UserLogin, UserRegister, UserResponse
-from ...services.auth import (
+from ...core.exceptions import (
     AuthenticationError,
     UserAlreadyExistsError,
     UserNotFoundError,
+)
+from ...core.security import create_access_token, create_refresh_token, hash_jti, verify_refresh_token
+from ...models.token_blacklist import TokenBlacklist
+from ...models.user import User
+from ...models.user_session import UserSession
+from ...schemas.auth import RefreshTokenRequest, TokenResponse, UserLogin, UserRegister, UserResponse
+from ...services.auth import (
     get_user_by_id,
     login_user,
     register_user,
 )
 from ..dependencies import get_current_user
-from ...models.user import User
 
 # Create router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
