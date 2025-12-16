@@ -48,7 +48,12 @@ class User(Base, TimestampMixin):
     # Default True = new users can login immediately
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
+    # Is user an admin? (elevated privileges)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Has user verified their email?
+    # Default False = users need to verify email after registration
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
     def __repr__(self) -> str:
