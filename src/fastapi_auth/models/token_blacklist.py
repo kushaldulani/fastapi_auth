@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from ..core.constant import BlacklistReason
 from .base import Base
 
 
@@ -48,10 +49,10 @@ class TokenBlacklist(Base):
         nullable=False,
     )
 
-    # Reason for blacklisting (optional, for debugging)
+    # Reason for blacklisting (for security auditing and debugging)
     reason: Mapped[str] = mapped_column(
         String(50),
-        default="rotated",
+        default=BlacklistReason.ROTATED.value,
         nullable=False,
     )
 

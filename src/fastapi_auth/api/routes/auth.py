@@ -16,6 +16,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.config import settings
+from ...core.constant import BlacklistReason, SessionStatus
 from ...core.database import get_db
 from ...core.exceptions import (
     AuthenticationError,
@@ -170,7 +171,7 @@ async def refresh_token_endpoint(
     result = await db.execute(
         select(UserSession).where(
             UserSession.refresh_token_jti_hash == current_refresh_jti_hash,
-            UserSession.status == "active"
+            UserSession.status == SessionStatus.ACTIVE.value
         )
     )
     session = result.scalar_one_or_none()
@@ -192,7 +193,7 @@ async def refresh_token_endpoint(
             await db.execute(
                 update(UserSession)
                 .where(UserSession.user_id == user_id)
-                .values(status="revoked")
+                .values(status=SessionStatus.REVOKED.value)
             )
 
             # Blacklist this token for audit
@@ -200,7 +201,7 @@ async def refresh_token_endpoint(
                 jti_hash=current_refresh_jti_hash,
                 user_id=user_id,
                 expires_at=datetime.fromtimestamp(payload["exp"], tz=timezone.utc),
-                reason="security_breach_reuse",
+                reason=BlacklistReason.SECURITY_BREACH_REUSE.value,
             )
             db.add(blacklist_entry)
             await db.commit()
@@ -253,7 +254,7 @@ async def refresh_token_endpoint(
         jti_hash=current_refresh_jti_hash,
         user_id=user_id,
         expires_at=datetime.fromtimestamp(payload["exp"], tz=timezone.utc),
-        reason="rotated",
+        reason=BlacklistReason.ROTATED.value,
     )
     db.add(blacklist_entry)
     await db.commit()

@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from ..core.constant import SessionStatus
 from .base import Base
 
 
@@ -83,7 +84,7 @@ class UserSession(Base):
 
     # Session status: active, revoked, expired
     status: Mapped[str] = mapped_column(
-        String(20), default="active", index=True, nullable=False
+        String(20), default=SessionStatus.ACTIVE.value, index=True, nullable=False
     )
 
     # Optional: Device/browser info for user to identify their sessions

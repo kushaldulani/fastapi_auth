@@ -9,6 +9,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..core.constant import SessionStatus
 from ..core.database import get_db
 from ..core.security import hash_jti, verify_access_token
 from ..models.user import User
@@ -85,7 +86,7 @@ async def get_current_user(
         select(UserSession).where(
             UserSession.user_id == user_id,
             UserSession.access_token_jti_hash == access_token_jti_hash,
-            UserSession.status == "active"
+            UserSession.status == SessionStatus.ACTIVE.value
         )
     )
     session = result.scalar_one_or_none()
