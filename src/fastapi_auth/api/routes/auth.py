@@ -11,6 +11,7 @@ Routes:
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 from jose import jwt
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,7 @@ from ...services.auth import (
     login_user,
     register_user,
 )
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, security
 
 # Create router
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -266,47 +267,91 @@ async def refresh_token_endpoint(
 
 
 # ============================================================================
-# GET /auth/me - Get Current User (Protected Route)
+# POST /auth/logout - Logout User
 # ============================================================================
 
-# TODO: This will be implemented in Step 8 with get_current_user dependency
-# @router.get("/me", response_model=UserResponse)
-# async def get_me(current_user: User = Depends(get_current_user)):
-#     """Get current user information."""
-#     return current_user
+@router.post(
+    "/logout",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Logout user",
+    description="Revoke current session by setting status to 'revoked'. Access token becomes immediately invalid.",
+)
+async def logout(
+    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Logout user by revoking the current session.
+
+    This implements immediate token revocation using our stateful JWT approach:
+    1. Extract access token JTI from the token
+    2. Find the session with that access_token_jti_hash
+    3. Set session status to 'revoked'
+    4. Next API request with this token will fail (even if not expired)
+
+    **Security benefits:**
+    - Immediate revocation (no need to wait for token expiration)
+    - Session stays in database for audit trail
+    - Can be called from any device to logout from that specific device
+
+    Returns:
+        Success message confirming logout
+    """
+    # Extract access token from Authorization header
+    access_token = credentials.credentials
+
+    # Decode to get JTI (we already know it's valid from get_current_user dependency)
+    payload = jwt.decode(access_token, settings.SECRET_KEY, algorithms=["HS256"])
+    access_jti = payload.get("jti")
+
+    # Hash the JTI to look up in database
+    access_token_jti_hash = hash_jti(access_jti)
+
+    # Revoke the session
+    await db.execute(
+        update(UserSession)
+        .where(
+            UserSession.user_id == current_user.id,
+            UserSession.access_token_jti_hash == access_token_jti_hash,
+        )
+        .values(status=SessionStatus.REVOKED.value)
+    )
+    await db.commit()
+
+    return {
+        "message": "Logged out successfully",
+        "detail": "Your session has been revoked. Please login again to access protected resources.",
+    }
 
 
 # ============================================================================
-# GET /auth/hello - Protected Test Endpoint
+# GET /auth/me - Get Current User Info
 # ============================================================================
 
 @router.get(
-    "/hello",
-    response_model=dict,
-    summary="Protected Hello Endpoint",
-    description="Test endpoint to verify access token authentication works.",
+    "/me",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get current user info",
+    description="Get authenticated user's profile information.",
 )
-async def hello(current_user: User = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user)):
     """
-    Protected endpoint that requires valid access token.
+    Get current user information.
 
-    This endpoint demonstrates:
-    1. Bearer token authentication
-    2. Automatic token validation
-    3. User extraction from token
+    This is a protected endpoint that requires a valid access token.
+    Returns the authenticated user's profile data.
 
-    How to use in Swagger:
-    1. Register/Login to get access_token
-    2. Click "Authorize" button (top right)
-    3. Enter: Bearer <your_access_token>
-    4. Try this endpoint!
+    Useful for:
+    - Loading user profile on app startup
+    - Checking if token is still valid
+    - Getting user permissions/roles
 
     Returns:
-        Greeting message with user info
+        User profile information (id, email, is_active, etc.)
     """
-    return {
-        "message": f"Hello, {current_user.email}!",
-        "user_id": current_user.id,
-        "is_active": current_user.is_active,
-        "is_admin": current_user.is_admin,
-    }
+    return UserResponse.model_validate(current_user)
+
+
